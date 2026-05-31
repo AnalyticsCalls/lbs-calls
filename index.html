@@ -238,8 +238,6 @@ function render() {
 }
 
 const datePicker = document.getElementById("datePicker");
-  datePicker.focus(); datePicker.click();
-}
 document.getElementById("prev").addEventListener("click", () => {
   const next = shiftDate(currentISO, -1);
   if (next >= minDate) { currentISO = next; render(); }
