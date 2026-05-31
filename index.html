@@ -27,8 +27,23 @@
   .date-wrap:active { background: #e6eaf0; }
   .date-display { text-align: center; font-weight: 600; font-size: 1rem; line-height: 1.2; pointer-events: none; }
   .date-display .dow { font-size: 0.78rem; color: #888; font-weight: 500; display: block; }
-  .date-display .hint { font-size: 0.6rem; color: #aaa; font-weight: 400; display: block; margin-top: 2px; letter-spacing: 0.05em; }
-  #datePicker { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; cursor: pointer; font-size: 16px; }
+  .date-display .hint { display: none; }
+  #datePicker {
+    display: block;
+    width: calc(100% - 16px);
+    margin: 4px auto 0;
+    font-size: 0.78rem;
+    color: #1a73e8;
+    font-weight: 600;
+    border: 1px solid #d6e0ed;
+    border-radius: 8px;
+    padding: 5px 4px;
+    background: #f0f6ff;
+    text-align: center;
+    cursor: pointer;
+    -webkit-appearance: auto;
+    appearance: auto;
+  }
   .action-row { display: flex; gap: 8px; margin-bottom: 12px; }
   .today-btn, .reload-btn { padding: 10px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 600; cursor: pointer; touch-action: manipulation; transition: transform 0.1s, background 0.15s; }
   .today-btn { background: #1a73e8; color: white; flex: 2; }
@@ -131,7 +146,7 @@ const LS_RECLASSIFIED_FROM = "2026-05-01";
 const dates = Object.keys(SCHEDULE).sort();
 const minDate = dates[0];
 const maxDate = dates[dates.length - 1];
-const BUILD_TS = "May 9, 2026 10:53 AM";
+const BUILD_TS = "May 30, 2026 5:57 PM";
 
 function todayISO() {
   const d = new Date();
@@ -222,16 +237,9 @@ function render() {
   }
 }
 
-const dateWrap = document.getElementById("dateWrap");
 const datePicker = document.getElementById("datePicker");
-function openPicker() {
-  if (datePicker.showPicker) { try { datePicker.showPicker(); return; } catch(e) {} }
   datePicker.focus(); datePicker.click();
 }
-dateWrap.addEventListener("click", openPicker);
-dateWrap.addEventListener("keydown", (e) => {
-  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPicker(); }
-});
 document.getElementById("prev").addEventListener("click", () => {
   const next = shiftDate(currentISO, -1);
   if (next >= minDate) { currentISO = next; render(); }
@@ -255,19 +263,23 @@ datePicker.addEventListener("change", (e) => {
 });
 render();
 
+// Freshness check: shows update banner, never auto-reloads
 async function checkFreshness() {
   try {
     const res = await fetch(location.pathname + "?v=" + Date.now(), { cache: "no-store" });
     if (!res.ok) return;
     const text = await res.text();
-    const m = text.match(/Updated:\s*([^<]+)</);
-    if (m && m[1].trim() !== BUILD_TS) {
-      location.replace(location.pathname + "?t=" + Date.now());
+    const m2 = text.match(/Updated:\s*([^<]+)</);
+    if (m2 && m2[1].trim() !== BUILD_TS) {
+      const b = document.createElement("div");
+      b.style.cssText = "background:#1a73e8;color:#fff;text-align:center;padding:10px;font-size:0.9rem;cursor:pointer;font-weight:600;border-radius:10px;margin-bottom:10px;";
+      b.textContent = "Schedule updated — tap to reload";
+      b.onclick = () => location.replace(location.pathname + "?t=" + Date.now());
+      document.getElementById("content").prepend(b);
     }
-  } catch (e) {}
+  } catch(e) {}
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) checkFreshness(); });
-window.addEventListener("pageshow", checkFreshness);
 </script>
 </body>
 </html>
